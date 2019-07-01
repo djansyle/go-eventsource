@@ -29,7 +29,12 @@ func (a *accountMockEventStore) CreateSnapshot(opt *CreateSnapshotOption) (bool,
 }
 
 func (a *accountMockEventStore) RetrieveSnapshot(opt *RetrieveSnapshotOption) (Snapshot, error) {
-	return Snapshot{}, nil
+	return Snapshot{
+		AggregateID:      "uniqueid",
+		AggregateType:    1,
+		AggregateVersion: 20,
+		State:            []byte("{\"firstName\": \"Bob\", \"lastName\": \"Bar\"}"),
+	}, nil
 }
 
 type accountState struct {
@@ -104,13 +109,8 @@ func (a *accountAggregate) SerializeState() (string, error) {
 	return string(str), nil
 }
 
-func (a *accountAggregate) LoadFromSnapshot(snapshot Snapshot) error {
+func (a *accountAggregate) ApplySnapshot(snapshot *Snapshot) error {
 	err := json.Unmarshal(snapshot.State, a.State)
-	if err != nil {
-		return err
-	}
-
-	a.Version = snapshot.AggregateVersion
 	return err
 }
 
@@ -125,5 +125,18 @@ func TestAggregate(t *testing.T) {
 
 	if aggregate.State.LastName != "Doe" {
 		t.Fatalf("expecting value to be %q but got %q", "Doe", aggregate.State.LastName)
+	}
+
+	aggregate.LoadFromSnapshot(aggregate)
+	if aggregate.State.FirstName != "Bob" {
+		t.Fatalf("expecting value to be %q but got %q", "Bob", aggregate.State.FirstName)
+	}
+
+	if aggregate.State.LastName != "Bar" {
+		t.Fatalf("expecting value to be %q but got %q", "Bar", aggregate.State.LastName)
+	}
+
+	if aggregate.Version != 20 {
+		t.Fatalf("expecting value to be %d but got %d", 20, aggregate.Version)
 	}
 }

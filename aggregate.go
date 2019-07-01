@@ -33,7 +33,6 @@ type Aggregate struct {
 // AggregateHandler is the interface that needs to be satisfied by all aggregates
 type AggregateHandler interface {
 	AddApplyHandler(*ApplyHandler)
-
 	Apply(Event) error
 
 	Fold(AggregateHandler) error
@@ -41,7 +40,8 @@ type AggregateHandler interface {
 
 	TakeSnapshot(AggregateHandler) error
 	GetSnapshot() (*Snapshot, error)
-	LoadFromSnapshot(Snapshot) error
+	LoadFromSnapshot(AggregateHandler) error
+	ApplySnapshot(*Snapshot) error
 
 	SerializeState() (string, error)
 }
@@ -172,4 +172,19 @@ func (a *Aggregate) NewApplyHandler(eventType string, aggregateClassVersion uint
 		AggregateClassVersion: aggregateClassVersion,
 		Handler:               handler,
 	}
+}
+
+// LoadFromSnapshot retrieves the latest snapshot of the aggregate and applies it to the `aggregate`
+func (a *Aggregate) LoadFromSnapshot(aggregate AggregateHandler) error {
+	a.Lock()
+	defer a.Unlock()
+
+	snapshot, err := a.GetSnapshot()
+	if err != nil {
+		return err
+	}
+
+	aggregate.ApplySnapshot(snapshot)
+	a.Version = snapshot.AggregateVersion
+	return nil
 }
