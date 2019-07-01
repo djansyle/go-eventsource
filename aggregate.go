@@ -15,7 +15,9 @@ type ApplyHandler struct {
 
 // CanHandle base method for determining whether the `Handler` can process the event
 func (ah *ApplyHandler) CanHandle(event Event) bool {
-	return ah.EventType == event.Type && ah.AggregateType == event.AggregateType && ah.AggregateClassVersion == event.AggregateClassVersion
+	return ah.EventType == event.Type &&
+		ah.AggregateType == event.AggregateType &&
+		ah.AggregateClassVersion == event.AggregateClassVersion
 }
 
 // Aggregate is the base struct for all aggregates
