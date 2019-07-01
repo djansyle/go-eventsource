@@ -5,7 +5,7 @@ import "sync"
 // EventHandler handles the event and apply the change to the state.
 type EventHandler func(Event) error
 
-// ApplyHandler is the function that can handle event
+// ApplyHandler holds the information of what `Event` does the `Handler` can process
 type ApplyHandler struct {
 	EventType             string
 	AggregateType         uint64
@@ -13,7 +13,7 @@ type ApplyHandler struct {
 	Handler               EventHandler
 }
 
-// CanHandle determine whether the apply handle can the event
+// CanHandle base method for determining whether the `Handler` can process the event
 func (ah *ApplyHandler) CanHandle(event Event) bool {
 	return ah.EventType == event.Type && ah.AggregateType == event.AggregateType && ah.AggregateClassVersion == event.AggregateClassVersion
 }
