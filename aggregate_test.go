@@ -60,7 +60,7 @@ type AccountUpdatedEvent struct {
 
 func newAccountAggregate() *accountAggregate {
 	aggregate := &accountAggregate{
-		Aggregate: Aggregate{ID: "uniqueid", Type: 1, Version: 0, rabbitEventStore: &accountMockEventStore{}},
+		Aggregate: Aggregate{aggregateID: "uniqueid", aggregateType: 1, aggregateVersion: 0, rabbitEventStore: &accountMockEventStore{}},
 		State:     &accountState{}}
 
 	aggregate.AddApplyHandler(aggregate.NewApplyHandler("AccountCreated", 1, aggregate.accountCreatedHandler))
@@ -136,7 +136,7 @@ func TestAggregate(t *testing.T) {
 		t.Fatalf("expecting value to be %q but got %q", "Bar", aggregate.State.LastName)
 	}
 
-	if aggregate.Version != 20 {
-		t.Fatalf("expecting value to be %d but got %d", 20, aggregate.Version)
+	if aggregate.Version() != 20 {
+		t.Fatalf("expecting value to be %d but got %d", 20, aggregate.Version())
 	}
 }
