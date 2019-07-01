@@ -1,4 +1,4 @@
-package esd
+package eventsource
 
 import (
 	"encoding/json"
