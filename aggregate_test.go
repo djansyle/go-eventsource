@@ -60,11 +60,11 @@ type AccountUpdatedEvent struct {
 
 func newAccountAggregate() *accountAggregate {
 	aggregate := &accountAggregate{
-		Aggregate: Aggregate{aggregateID: "uniqueid", aggregateType: 1, aggregateVersion: 0, rabbitEventStore: &accountMockEventStore{}},
+		Aggregate: Aggregate{id: "uniqueid", aggregateType: 1, aggregateVersion: 0, aggregateClassVersion: 1, rabbitEventStore: &accountMockEventStore{}},
 		State:     &accountState{}}
 
-	aggregate.AddApplyHandler(aggregate.NewApplyHandler("AccountCreated", 1, aggregate.accountCreatedHandler))
-	aggregate.AddApplyHandler(aggregate.NewApplyHandler("AccountUpdated", 1, aggregate.accountUpdatedHandler))
+	aggregate.AddApplyHandler(aggregate.NewApplyHandler("AccountCreated", aggregate.accountCreatedHandler))
+	aggregate.AddApplyHandler(aggregate.NewApplyHandler("AccountUpdated", aggregate.accountUpdatedHandler))
 
 	return aggregate
 }

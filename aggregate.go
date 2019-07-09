@@ -23,12 +23,12 @@ func (ah *ApplyHandler) CanHandle(event Event) bool {
 // Aggregate is the base struct for all aggregates
 type Aggregate struct {
 	sync.RWMutex
-	aggregateID      string
-	aggregateType    uint64
-	aggregateVersion uint64
-
-	applyHanders     []*ApplyHandler
-	rabbitEventStore EventStore
+	id                    string
+	aggregateType         uint64
+	aggregateVersion      uint64
+	aggregateClassVersion uint32
+	applyHanders          []*ApplyHandler
+	rabbitEventStore      EventStore
 }
 
 // AggregateHandler is the interface that needs to be satisfied by all aggregates
@@ -51,14 +51,14 @@ type AggregateHandler interface {
 	Type() uint64
 }
 
-// Version exposes the aggregate version
+// Version exposes the current aggregate version
 func (a *Aggregate) Version() uint64 {
 	return a.aggregateVersion
 }
 
 // ID exposes the aggregate id
 func (a *Aggregate) ID() string {
-	return a.aggregateID
+	return a.id
 }
 
 // Type exposes the aggregate type
@@ -185,11 +185,11 @@ func (a *Aggregate) TakeSnapshot(aggregate AggregateHandler) error {
 }
 
 // NewApplyHandler creates a new instance of the ApplyHandler for the current aggregate type
-func (a *Aggregate) NewApplyHandler(eventType string, aggregateClassVersion uint32, handler EventHandler) *ApplyHandler {
+func (a *Aggregate) NewApplyHandler(eventType string, handler EventHandler) *ApplyHandler {
 	return &ApplyHandler{
 		EventType:             eventType,
 		AggregateType:         a.Type(),
-		AggregateClassVersion: aggregateClassVersion,
+		AggregateClassVersion: a.aggregateClassVersion,
 		Handler:               handler,
 	}
 }
