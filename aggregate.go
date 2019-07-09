@@ -33,7 +33,7 @@ type Aggregate struct {
 
 // AggregateHandler is the interface that needs to be satisfied by all aggregates
 type AggregateHandler interface {
-	AddApplyHandler(*ApplyHandler)
+	AddApplyHandler(string, EventHandler)
 	Apply(Event) error
 
 	Fold(AggregateHandler) error
@@ -67,11 +67,18 @@ func (a *Aggregate) Type() uint64 {
 }
 
 // AddApplyHandler adds the handler to the apply handler list
-func (a *Aggregate) AddApplyHandler(handler *ApplyHandler) {
+func (a *Aggregate) AddApplyHandler(eventType string, handler EventHandler) {
 	a.Lock()
 	defer a.Unlock()
 
-	a.applyHanders = append(a.applyHanders, handler)
+	applyHandler := &ApplyHandler{
+		EventType:             eventType,
+		AggregateType:         a.Type(),
+		AggregateClassVersion: a.aggregateClassVersion,
+		Handler:               handler,
+	}
+
+	a.applyHanders = append(a.applyHanders, applyHandler)
 }
 
 // Fold applies the series of event to the aggregate
@@ -182,16 +189,6 @@ func (a *Aggregate) TakeSnapshot(aggregate AggregateHandler) error {
 	})
 
 	return err
-}
-
-// NewApplyHandler creates a new instance of the ApplyHandler for the current aggregate type
-func (a *Aggregate) NewApplyHandler(eventType string, handler EventHandler) *ApplyHandler {
-	return &ApplyHandler{
-		EventType:             eventType,
-		AggregateType:         a.Type(),
-		AggregateClassVersion: a.aggregateClassVersion,
-		Handler:               handler,
-	}
 }
 
 // LoadFromSnapshot retrieves the latest snapshot of the aggregate and applies it to the `aggregate`

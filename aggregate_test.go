@@ -63,8 +63,8 @@ func newAccountAggregate() *accountAggregate {
 		Aggregate: Aggregate{id: "uniqueid", aggregateType: 1, aggregateVersion: 0, aggregateClassVersion: 1, rabbitEventStore: &accountMockEventStore{}},
 		State:     &accountState{}}
 
-	aggregate.AddApplyHandler(aggregate.NewApplyHandler("AccountCreated", aggregate.accountCreatedHandler))
-	aggregate.AddApplyHandler(aggregate.NewApplyHandler("AccountUpdated", aggregate.accountUpdatedHandler))
+	aggregate.AddApplyHandler("AccountCreated", aggregate.accountCreatedHandler)
+	aggregate.AddApplyHandler("AccountUpdated", aggregate.accountUpdatedHandler)
 
 	return aggregate
 }
