@@ -27,8 +27,20 @@ type Aggregate struct {
 	aggregateType         uint64
 	aggregateVersion      uint64
 	aggregateClassVersion uint32
-	applyHanders          []*ApplyHandler
-	rabbitEventStore      EventStore
+	applyHandlers         []*ApplyHandler
+	eventStore            EventStore
+}
+
+// NewAggregate creates a new instance of the aggregate
+func NewAggregate(id string, aggregateType uint64, aggregateVersion uint64, aggregateClassVersion uint32, eventStore EventStore) Aggregate {
+	return Aggregate{
+		id:                    id,
+		aggregateType:         aggregateType,
+		aggregateVersion:      aggregateVersion,
+		aggregateClassVersion: aggregateClassVersion,
+		eventStore:            eventStore,
+		applyHandlers:         make([]*ApplyHandler, 0),
+	}
 }
 
 // AggregateHandler is the interface that needs to be satisfied by all aggregates
@@ -78,7 +90,7 @@ func (a *Aggregate) AddApplyHandler(eventType string, handler EventHandler) {
 		Handler:               handler,
 	}
 
-	a.applyHanders = append(a.applyHanders, applyHandler)
+	a.applyHandlers = append(a.applyHandlers, applyHandler)
 }
 
 // Fold applies the series of event to the aggregate
@@ -105,7 +117,7 @@ func (a *Aggregate) Fold(aggregate AggregateHandler) error {
 
 // Apply loops through the handlers and try to process the event
 func (a *Aggregate) Apply(event Event) error {
-	for _, handler := range a.applyHanders {
+	for _, handler := range a.applyHandlers {
 		if !handler.CanHandle(event) {
 			continue
 		}
@@ -124,7 +136,7 @@ func (a *Aggregate) RetrieveEvents() ([]Event, error) {
 	a.RLock()
 	defer a.RUnlock()
 
-	events, err := a.rabbitEventStore.RetrieveEvents(
+	events, err := a.eventStore.RetrieveEvents(
 		&RetrieveEventsOption{
 			AggregateID:           a.ID(),
 			AggregateType:         a.Type(),
@@ -143,7 +155,7 @@ func (a *Aggregate) ApplyAndSave(aggregate AggregateHandler, event Event) error 
 	a.Lock()
 	defer a.Unlock()
 
-	savedEvent, err := a.rabbitEventStore.CreateEvent(event)
+	savedEvent, err := a.eventStore.CreateEvent(event)
 	if err != nil {
 		return err
 	}
@@ -159,7 +171,7 @@ func (a *Aggregate) ApplyAndSave(aggregate AggregateHandler, event Event) error 
 
 // GetSnapshot retrieves the latest snapshot from the eventstore of the aggregate
 func (a *Aggregate) GetSnapshot() (*Snapshot, error) {
-	snapshot, err := a.rabbitEventStore.RetrieveSnapshot(&RetrieveSnapshotOption{
+	snapshot, err := a.eventStore.RetrieveSnapshot(&RetrieveSnapshotOption{
 		AggregateID:   a.ID(),
 		AggregateType: a.Type(),
 	})
@@ -181,7 +193,7 @@ func (a *Aggregate) TakeSnapshot(aggregate AggregateHandler) error {
 		return err
 	}
 
-	_, err = a.rabbitEventStore.CreateSnapshot(&CreateSnapshotOption{
+	_, err = a.eventStore.CreateSnapshot(&CreateSnapshotOption{
 		AggregateVersion: a.Version(),
 		AggregateID:      a.ID(),
 		AggregateType:    a.Type(),
