@@ -32,22 +32,22 @@ type Snapshot struct {
 
 // RetrieveEventsOption for matching events in the eventstore
 type RetrieveEventsOption struct {
-	AggregateID           string  // Match all events that matches the aggregate id
-	AggregateType         uint64  // Match all events that is only on the aggregate types
-	SinceAggregateVersion uint64  // Match all events after the provider aggregate version
-	SinceID               *string // Match all events after the provider event
+	AggregateID           string  `json:"aggregateId"`           // Match all events that matches the aggregate id
+	AggregateType         uint64  `json:"aggregateType"`         // Match all events that is only on the aggregate types
+	SinceAggregateVersion uint64  `json:"sinceAggregateVersion"` // Match all events after the provider aggregate version
+	SinceID               *string `json:"sinceId"`               // Match all events after the provider event
 }
 
 // CreateSnapshotOption for creating snapshot for the eventstore
 type CreateSnapshotOption struct {
-	AggregateVersion uint64
-	AggregateID      string
-	AggregateType    uint64
-	State            interface{}
+	AggregateVersion uint64 `json:"aggregateVersion"`
+	AggregateID      string `json:"aggregateId"`
+	AggregateType    uint64 `json:"aggregateType"`
+	State            interface{} `json:"state"`
 }
 
 // RetrieveSnapshotOption to retrieve snapshot of the provided id and type
 type RetrieveSnapshotOption struct {
-	AggregateID   string
-	AggregateType uint64
+	AggregateID   string `json:"aggregateId"`
+	AggregateType uint64 `json:"aggregateType"`
 }
